@@ -19,6 +19,6 @@
 
 ### CNC
 
-<img src="cnc.jpg" width="400">
+<img src="images/cnc.jpg" width="400">
 
 #### 
