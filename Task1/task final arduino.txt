@@ -1,0 +1,96 @@
+#include <OneWire.h>
+#include <DallasTemperature.h>
+#include <ESP8266WiFi.h>
+#include <WiFiClient.h>
+#include <ESP8266WebServer.h>
+// Data wire is plugged into port 2 on the Arduino
+#define ONE_WIRE_BUS 2
+
+OneWire oneWire(ONE_WIRE_BUS);
+
+// Pass our oneWire reference to Dallas Temperature. 
+DallasTemperature sensors(&oneWire);
+
+/*
+ * The setup function. We only start the sensors here
+ */
+
+/* Set these to your desired credentials. */
+const char *ssid = "ESPap";
+const char *password = "";
+
+ESP8266WebServer server(80);
+
+/* Just a little test message.  Go to http://192.168.4.1 in a web browser
+   connected to this access point to see it.
+*/
+float tempReading;
+int sensorValue ;
+String s ;
+String sensorString ;
+double fsrValue ;
+String fsrString ;
+float fsrVoltage;
+
+void handleRoot() {
+  server.send(200, "text/html", "<h1>You are connected </h1>" +  s);
+  }
+
+
+void setup() {
+  delay(1000);
+  Serial.begin(115200);
+  Serial.println();
+  Serial.print("Configuring access point...");
+  /* You can remove the password parameter if you want the AP to be open. */
+  WiFi.softAP(ssid, password);
+
+  IPAddress myIP = WiFi.softAPIP();
+  Serial.print("AP IP address: ");
+  Serial.println(myIP);
+  server.on("/", handleRoot);
+  server.begin();
+  Serial.println("HTTP server started");
+  Serial.println("Dallas Temperature IC Control Library Demo");
+
+  // Start up the library
+  sensors.begin();
+}
+
+void loop() {
+ /* if(Serial.available())
+    {
+      s = Serial.readString();
+    }
+  */
+    
+
+   // call sensors.requestTemperatures() to issue a global temperature 
+  // request to all devices on the bus
+  Serial.print("Requesting temperatures...");
+  sensors.requestTemperatures(); // Send the command to get temperatures
+  Serial.println("DONE");
+  // After we got the temperatures, we can print them here.
+  // We use the function ByIndex, and as an example get the temperature from the first sensor only.
+  Serial.print("Temperature is: ");
+  tempReading = sensors.getTempCByIndex(0);
+  Serial.println(tempReading);  
+   
+   server.on("/temp" , [](){
+      server.send(200, "text/html", String(tempReading)); 
+        });   
+
+
+////////////////////////////////////Pressure/////??k..k..k.///
+  fsrValue = analogRead(A0);            //read the input on analog pin 0
+  //fsrVoltage = map(fsrValue, 0 , 1023 ,0 , 3.3);
+ // fsrString ="pressure: "+String(fsrVoltage);
+  Serial.println(fsrValue);           //print out the value you read
+  server.on("/press" , [](){
+      server.send(200, "text/html", String(fsrValue)); 
+      });
+   
+
+  server.handleClient();
+  delay(1000);
+}
